@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reportes de Mantenimiento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>Reportes de Mantenimiento</h1>
+      <div class="sub"><span id="hospitalNombre">Hospital General de Rioverde</span> &middot; Conservaci&oacute;n y Mantenimiento <span class="version" id="versionTxt"></span></div>
+    </div>
+    <div class="user oculto" id="userBox">
+      <span><strong id="userNombre"></strong><br><span id="userRol" style="opacity:.8"></span></span>
+      <button type="button" id="btnSalir">Salir</button>
+    </div>
+  </div>
+</header>
+
+<nav class="nav"><div class="wrap" id="navBar"></div></nav>
+
+<main class="wrap">
+  <div id="avisoConfig" class="notice oculto">Falta configurar la URL del backend (<code>WEBAPP_URL</code> en <code>js/config.js</code>).</div>
+
+  <!-- ============ REPORTAR FALLA (público) ============ -->
+  <section id="vReportar" class="vista">
+    <div class="card" id="formReporteCard">
+      <h2>Reportar una falla</h2>
+      <p class="lead">Describe la falla y d&oacute;nde est&aacute;. Al enviar recibir&aacute;s un folio para consultar su avance.</p>
+      <form id="formReporte" autocomplete="off">
+        <div class="grid2">
+          <div class="field">
+            <label for="rArea">&Aacute;rea o servicio</label>
+            <input type="text" id="rArea" list="listaAreas" maxlength="120" required placeholder="Ej. Urgencias">
+            <datalist id="listaAreas"></datalist>
+          </div>
+          <div class="field">
+            <label for="rEspacio">Lugar exacto</label>
+            <input type="text" id="rEspacio" maxlength="120" placeholder="Ej. Ba&ntilde;o de pacientes, cub&iacute;culo 3">
+          </div>
+        </div>
+        <div class="field">
+          <label for="rCategoria">Tipo de falla</label>
+          <select id="rCategoria" required><option value="">Selecciona...</option></select>
+        </div>
+        <div class="field">
+          <label for="rDescripcion">Descripci&oacute;n de la falla</label>
+          <textarea id="rDescripcion" maxlength="2000" required placeholder="Qu&eacute; pasa, desde cu&aacute;ndo, si es intermitente..."></textarea>
+        </div>
+        <div class="field">
+          <label class="check" for="rAfecta">
+            <input type="checkbox" id="rAfecta">
+            <span><strong>Afecta la atenci&oacute;n de pacientes o la seguridad</strong><br><span style="font-size:12px;color:var(--ink-soft)">Ej. sin energ&iacute;a en un &aacute;rea de atenci&oacute;n, fuga de agua sobre equipo, puerta de acceso que no cierra.</span></span>
+          </label>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label for="rReporta">Nombre de quien reporta</label>
+            <input type="text" id="rReporta" maxlength="120" required placeholder="Ej. Ana Torres">
+          </div>
+          <div class="field">
+            <label for="rExtension">Extensi&oacute;n o tel&eacute;fono</label>
+            <input type="tel" id="rExtension" maxlength="30" placeholder="Opcional">
+          </div>
+        </div>
+        <div class="field">
+          <label>Fotos (opcional, hasta <span class="maxFotosR">3</span>)</label>
+          <div class="notice" style="margin-bottom:8px">No fotograf&iacute;es pacientes, expedientes ni pantallas con datos personales.</div>
+          <div class="fotos-picker" id="rFotos"></div>
+          <input type="file" id="rFotoInput" accept="image/*" multiple class="oculto">
+        </div>
+        <button type="submit" class="btn block" id="rEnviar">Enviar reporte</button>
+        <div class="msg" id="rMsg"></div>
+      </form>
+    </div>
+    <div class="card folio-ok oculto" id="folioOk">
+      <div style="font-size:13px;color:var(--ink-soft)">Reporte registrado. Tu folio es:</div>
+      <div class="big" id="folioOkTxt"></div>
+      <div style="font-size:13px;color:var(--ink-soft);margin-bottom:16px" id="folioOkSub"></div>
+      <button type="button" class="btn ghost" id="btnOtroReporte">Reportar otra falla</button>
+    </div>
+  </section>
+
+  <!-- ============ CONSULTAR FOLIO (público) ============ -->
+  <section id="vConsultar" class="vista oculto">
+    <div class="card">
+      <h2>Consultar un reporte</h2>
+      <p class="lead">Escribe el folio que recibiste al reportar.</p>
+      <form id="formConsulta" class="inline" autocomplete="off">
+        <input type="text" id="cFolio" placeholder="MT-2026-0001" maxlength="30" style="flex:1;min-width:180px;padding:10px 11px;border:1px solid var(--border);border-radius:5px">
+        <button type="submit" class="btn">Consultar</button>
+      </form>
+      <div class="msg" id="cMsg"></div>
+      <div id="cResultado"></div>
+    </div>
+  </section>
+
+  <!-- ============ INGRESAR ============ -->
+  <section id="vIngresar" class="vista oculto">
+    <div class="grid2">
+      <div class="card">
+        <h2>T&eacute;cnicos</h2>
+        <p class="lead">Entra con tu PIN para ver y trabajar tus &oacute;rdenes.</p>
+        <form id="formPin" autocomplete="off">
+          <div class="field">
+            <label for="lPin">PIN</label>
+            <input type="password" id="lPin" inputmode="numeric" maxlength="20" placeholder="PIN personal">
+          </div>
+          <button type="submit" class="btn block">Entrar</button>
+          <div class="msg" id="lPinMsg"></div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Administraci&oacute;n</h2>
+        <p class="lead">Jefatura de Mantenimiento, Administraci&oacute;n general y Desarrollo.</p>
+        <form id="formUsuario" autocomplete="on">
+          <div class="field">
+            <label for="lUsuario">Usuario</label>
+            <input type="text" id="lUsuario" autocomplete="username" maxlength="60">
+          </div>
+          <div class="field">
+            <label for="lPassword">Contrase&ntilde;a</label>
+            <input type="password" id="lPassword" autocomplete="current-password" maxlength="100">
+          </div>
+          <button type="submit" class="btn navy block">Entrar</button>
+          <div class="msg" id="lUsuarioMsg"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LISTA DE REPORTES (con sesión) ============ -->
+  <section id="vLista" class="vista oculto">
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <input type="text" id="fTexto" placeholder="Buscar folio, &aacute;rea, falla, quien reporta...">
+      <select id="fPrioridad"><option value="">Toda prioridad</option></select>
+      <select id="fCategoria"><option value="">Todo tipo</option></select>
+      <select id="fTecnico" class="soloStaff"><option value="">Todo t&eacute;cnico</option></select>
+      <button type="button" class="btn small" id="btnRefrescar">Actualizar</button>
+      <button type="button" class="btn small navy soloStaff" id="btnExportar">Exportar CSV</button>
+    </div>
+    <div id="lista" class="lista"></div>
+  </section>
+
+  <!-- ============ DEPURACIÓN DE FOTOS ============ -->
+  <section id="vDepuracion" class="vista oculto">
+    <div class="card">
+      <h2>Depuraci&oacute;n de fotos</h2>
+      <p class="lead">Fotos de reportes cerrados hace m&aacute;s de 12 meses. Nada se borra sin tu autorizaci&oacute;n; las borradas pasan a la papelera de Drive (30 d&iacute;as). La orden en PDF conserva sus fotos.</p>
+      <div id="depLista"></div>
+    </div>
+  </section>
+
+  <!-- ============ BITÁCORA (desarrollo) ============ -->
+  <section id="vBitacora" class="vista oculto">
+    <div class="card">
+      <h2>Bit&aacute;cora de cambios</h2>
+      <div class="toolbar">
+        <input type="text" id="bFolio" placeholder="Filtrar por folio (opcional)">
+        <button type="button" class="btn small" id="btnBitacora">Consultar</button>
+      </div>
+      <div id="bLista" class="scroll-x"></div>
+    </div>
+  </section>
+</main>
+
+<footer>Elaborado por IBM. Daniel Alejandro S&aacute;nchez Ram&iacute;rez &middot; <span class="version" id="versionPie"></span></footer>
+
+<div class="toasts" id="toasts"></div>
+<div id="modalRaiz"></div>
+
+<script src="js/config.js"></script>
+<script src="js/hospitales.js"></script>
+<script src="js/documentos.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
